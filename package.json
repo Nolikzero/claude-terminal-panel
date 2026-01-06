@@ -3,7 +3,7 @@
   "displayName": "Claude Terminal Panel",
   "description": "A dedicated terminal in the secondary panel for running Claude Code",
   "version": "1.0.0",
-  "publisher": "nolikzero",
+  "publisher": "0ly",
   "license": "MIT",
   "icon": "media/icon.png",
   "repository": {
