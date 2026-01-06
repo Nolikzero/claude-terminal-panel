@@ -1,0 +1,13 @@
+node_modules/
+dist/
+*.vsix
+.vscode-test/
+.claude/
+
+# ESLint
+.eslintcache
+
+# Editor
+.idea/
+*.swp
+*.swo

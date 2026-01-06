@@ -1,0 +1,172 @@
+{
+  "name": "claude-terminal-panel",
+  "displayName": "Claude Terminal Panel",
+  "description": "A dedicated terminal in the secondary panel for running Claude Code",
+  "version": "1.0.0",
+  "publisher": "nolikzero",
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nolikzero/claude-terminal-panel"
+  },
+  "bugs": {
+    "url": "https://github.com/nolikzero/claude-terminal-panel/issues"
+  },
+  "homepage": "https://github.com/nolikzero/claude-terminal-panel#readme",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "keywords": [
+    "claude",
+    "ai",
+    "terminal",
+    "sidebar",
+    "claude-code",
+    "gemini",
+    "aider",
+    "cli",
+    "assistant"
+  ],
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "claudeTerminalContainer",
+          "title": "Claude Terminal",
+          "icon": "$(terminal)"
+        }
+      ]
+    },
+    "views": {
+      "claudeTerminalContainer": [
+        {
+          "type": "webview",
+          "id": "claudeTerminal.terminalView",
+          "name": "Terminal",
+          "visibility": "visible"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "claudeTerminal.restart",
+        "title": "Restart Terminal",
+        "category": "Claude Terminal",
+        "icon": "$(debug-restart)"
+      },
+      {
+        "command": "claudeTerminal.clear",
+        "title": "Clear Terminal",
+        "category": "Claude Terminal",
+        "icon": "$(clear-all)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "claudeTerminal.restart",
+          "when": "view == claudeTerminal.terminalView",
+          "group": "navigation"
+        },
+        {
+          "command": "claudeTerminal.clear",
+          "when": "view == claudeTerminal.terminalView",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Claude Terminal",
+      "properties": {
+        "claudeTerminal.command": {
+          "type": "string",
+          "default": "claude",
+          "description": "Command to run on terminal start"
+        },
+        "claudeTerminal.args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Arguments to pass to the command"
+        },
+        "claudeTerminal.autoRun": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to auto-run command on start"
+        },
+        "claudeTerminal.shell": {
+          "type": "string",
+          "default": "",
+          "description": "Custom shell path (empty = system default)"
+        },
+        "claudeTerminal.env": {
+          "type": "object",
+          "default": {},
+          "description": "Additional environment variables"
+        },
+        "claudeTerminal.directMode": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run command directly without shell wrapper (cleaner output, but no shell features)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run lint && npm run compile",
+    "compile": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --external:node-pty --format=cjs --platform=node",
+    "watch": "npm run compile -- --watch",
+    "rebuild": "npx @electron/rebuild",
+    "postinstall": "npm run rebuild",
+    "package": "vsce package",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"media/**/*.{js,css}\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"media/**/*.{js,css}\"",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "src/**/*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "media/**/*.js": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "media/**/*.css": [
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.2",
+    "@eslint/js": "^9.39.2",
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.19.0",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^9.1.2",
+    "globals": "^15.15.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "prettier": "^3.7.4",
+    "typescript": "^5.3.0",
+    "typescript-eslint": "^8.52.0"
+  },
+  "dependencies": {
+    "node-pty": "^1.0.0"
+  }
+}
