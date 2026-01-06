@@ -22,7 +22,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Package extension
         run: npx @vscode/vsce package
