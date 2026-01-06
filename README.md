@@ -31,16 +31,18 @@ Run **Claude Code**, **Gemini CLI**, **OpenAI Codex**, **Aider**, **OpenCode** a
 
 ## Supported Tools
 
-This extension works with any command-line AI assistant. Here are some popular options:
+This extension works with any command-line AI assistant. Here are some popular options, with corrected installation instructions and additional top CLI AI coding agents based on current popularity in 2025-2026, including OpenCode:
 
-| Tool                                                              | Command      | Installation                               |
-| ----------------------------------------------------------------- | ------------ | ------------------------------------------ |
-| [Claude Code](https://claude.com/claude-code)                     | `claude`     | `npm install -g @anthropic-ai/claude-code` |
-| [Gemini CLI](https://github.com/google-gemini/gemini-cli)         | `gemini`     | `npm install -g @anthropic-ai/gemini-cli`  |
-| [Aider](https://aider.chat)                                       | `aider`      | `pip install aider-chat`                   |
-| [OpenAI Codex](https://github.com/openai/codex)                   | `codex`      | See OpenAI docs                            |
-| [GitHub Copilot CLI](https://githubnext.com/projects/copilot-cli) | `gh copilot` | `gh extension install github/gh-copilot`   |
-| Any CLI tool                                                      | Custom       | Configure via settings                     |
+| Tool                                                                    | Command       | Installation                               |
+| ----------------------------------------------------------------------- | ------------- | ------------------------------------------ |
+| [Claude Code](https://github.com/anthropics/claude-code)                | `claude`      | `npm install -g @anthropic-ai/claude-code` |
+| [Gemini CLI](https://github.com/google-gemini/gemini-cli)               | `gemini`      | `npm install -g @google/gemini-cli`        |
+| [Aider](https://aider.chat)                                             | `aider`       | `pip install aider-chat`                   |
+| [Codex CLI](https://github.com/openai/codex)                            | `codex`       | `npm install -g @openai/codex`             |
+| [GitHub Copilot CLI](https://githubnext.com/projects/copilot-cli)       | `gh copilot`  | `gh extension install github/gh-copilot`   |
+| [Open Interpreter](https://github.com/openinterpreter/open-interpreter) | `interpreter` | `pip install open-interpreter`             |
+| [OpenCode](https://github.com/opencode-ai/opencode)                     | `opencode`    | `brew install opencode-ai/tap/opencode`    |
+| Any CLI tool                                                            | Custom        | Configure via settings                     |
 
 ## Installation
 
