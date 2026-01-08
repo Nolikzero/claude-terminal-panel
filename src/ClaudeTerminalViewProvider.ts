@@ -355,6 +355,9 @@ export class ClaudeTerminalViewProvider
     const stylesUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this.extensionUri, 'media', 'styles.css')
     );
+    const xtermCssUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.extensionUri, 'media', 'xterm.css')
+    );
     const scriptUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this.extensionUri, 'media', 'main.js')
     );
@@ -366,16 +369,13 @@ export class ClaudeTerminalViewProvider
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline' https://unpkg.com; script-src 'nonce-${nonce}' https://unpkg.com; font-src https://unpkg.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
+    <link href="${xtermCssUri.toString()}" rel="stylesheet">
     <link href="${stylesUri.toString()}" rel="stylesheet">
-    <link href="https://unpkg.com/xterm@5.3.0/css/xterm.css" rel="stylesheet" integrity="sha384-LJcOxlx9IMbNXDqJ2axpfEQKkAYbFjJfhXexLfiRJhjDU81mzgkiQq8rkV0j6dVh" crossorigin="anonymous">
 </head>
 <body>
     <div id="terminals-container"></div>
     <div id="tab-bar"></div>
-    <script src="https://unpkg.com/xterm@5.3.0/lib/xterm.js" integrity="sha384-/nfmYPUzWMS6v2atn8hbljz7NE0EI1iGx34lJaNzyVjWGDzMv+ciUZUeJpKA3Glc" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js" integrity="sha384-AQLWHRKAgdTxkolJcLOELg4E9rE89CPE2xMy3tIRFn08NcGKPTsELdvKomqji+DL" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/xterm-addon-web-links@0.9.0/lib/xterm-addon-web-links.js" integrity="sha384-U4fBROT3kCM582gaYiNaOSQiJbXPzd9SfR1598Y7yeGSYVBzikXrNg0XyuU+mOnl" crossorigin="anonymous"></script>
     <script nonce="${nonce}" src="${scriptUri.toString()}"></script>
 </body>
 </html>`;

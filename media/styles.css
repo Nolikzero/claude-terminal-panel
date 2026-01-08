@@ -155,16 +155,14 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 4px;
+  padding: 4px 10px;
 }
 
 .terminal-wrapper .xterm {
   height: 100%;
 }
 
-.terminal-wrapper .xterm-viewport {
-  overflow-y: auto;
-}
+/* xterm 6.0.0 handles viewport scrolling internally */
 
 /* Scrollbar styling */
 .terminal-wrapper .xterm-viewport::-webkit-scrollbar {

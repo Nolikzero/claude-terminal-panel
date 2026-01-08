@@ -1,6 +1,5 @@
 import type { Terminal as XTermTerminal, ITheme } from '@xterm/xterm';
 import type { FitAddon as XTermFitAddon } from '@xterm/addon-fit';
-import type { WebLinksAddon as XTermWebLinksAddon } from '@xterm/addon-web-links';
 
 // VS Code API types for webview
 export interface VSCodeAPI {
@@ -9,14 +8,9 @@ export interface VSCodeAPI {
   setState<T>(state: T): void;
 }
 
-// Global declarations for xterm.js CDN globals
+// Global declarations for VSCode webview API
 declare global {
   function acquireVsCodeApi(): VSCodeAPI;
-
-  // xterm.js globals (loaded via CDN)
-  const Terminal: typeof XTermTerminal;
-  const FitAddon: { FitAddon: typeof XTermFitAddon };
-  const WebLinksAddon: { WebLinksAddon: typeof XTermWebLinksAddon };
 }
 
 // Tab information

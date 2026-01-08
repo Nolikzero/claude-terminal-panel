@@ -1,3 +1,6 @@
+import { Terminal } from '@xterm/xterm';
+import { FitAddon } from '@xterm/addon-fit';
+import { WebLinksAddon } from '@xterm/addon-web-links';
 import type {
   VSCodeAPI,
   WebviewIncomingMessage,
@@ -37,13 +40,28 @@ class TerminalState {
   }
 }
 
-// Theme builder with caching
+// Theme and font builder with caching
 class ThemeBuilder {
   private cachedTheme: XTermTheme | null = null;
+  private cachedFontFamily: string | null = null;
+
+  private static readonly DEFAULT_FONT_FAMILY = 'Menlo, Monaco, "Courier New", monospace';
 
   private getCssVar(name: string, fallback: string): string {
     const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
     return value || fallback;
+  }
+
+  getFontFamily(): string {
+    if (this.cachedFontFamily) {
+      return this.cachedFontFamily;
+    }
+
+    // Read VSCode's editor font family from CSS variable
+    const editorFont = this.getCssVar('--vscode-editor-font-family', '');
+    this.cachedFontFamily = editorFont || ThemeBuilder.DEFAULT_FONT_FAMILY;
+
+    return this.cachedFontFamily;
   }
 
   getTheme(): XTermTheme {
@@ -86,6 +104,7 @@ class ThemeBuilder {
 
   invalidateCache(): void {
     this.cachedTheme = null;
+    this.cachedFontFamily = null;
   }
 }
 
@@ -260,11 +279,10 @@ class WebviewContext {
     const tempTerminal = new Terminal({
       cursorBlink: true,
       fontSize: 12,
-      fontFamily:
-        'var(--vscode-editor-font-family, "SF Mono", Monaco, Menlo, "Courier New", monospace)',
+      fontFamily: this.themeBuilder.getFontFamily(),
       lineHeight: 1.2
     });
-    const tempFitAddon = new FitAddon.FitAddon();
+    const tempFitAddon = new FitAddon();
     tempTerminal.loadAddon(tempFitAddon);
     tempTerminal.open(tempContainer);
     tempFitAddon.fit();
@@ -375,16 +393,15 @@ class WebviewContext {
     const terminal = new Terminal({
       cursorBlink: true,
       fontSize: 12,
-      fontFamily:
-        'var(--vscode-editor-font-family, "SF Mono", Monaco, Menlo, "Courier New", monospace)',
+      fontFamily: this.themeBuilder.getFontFamily(),
       lineHeight: 1.2,
       letterSpacing: 0,
       theme: this.themeBuilder.getTheme(),
       allowProposedApi: true
     });
 
-    const fitAddon = new FitAddon.FitAddon();
-    const webLinksAddon = new WebLinksAddon.WebLinksAddon();
+    const fitAddon = new FitAddon();
+    const webLinksAddon = new WebLinksAddon();
 
     terminal.loadAddon(fitAddon);
     terminal.loadAddon(webLinksAddon);

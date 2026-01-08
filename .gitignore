@@ -2,6 +2,7 @@ node_modules/
 dist/
 *.vsix
 media/main.js
+media/xterm.css
 .vscode-test/
 .claude/
 
