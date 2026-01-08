@@ -3,7 +3,7 @@
 [![Install in VS Code](https://img.shields.io/badge/Install%20in%20VS%20Code-Open-blue?style=for-the-badge&logo=visualstudiocode)](https://marketplace.visualstudio.com/items?itemName=0ly.claude-terminal-panel)
 [![Download VSIX](https://img.shields.io/github/v/release/nolikzero/claude-terminal-panel?style=for-the-badge&label=VSIX&color=green)](https://github.com/nolikzero/claude-terminal-panel/releases/latest)
 
-[![VS Code](https://img.shields.io/badge/VS%20Code-1.85%2B-blue?logo=visualstudiocode)](https://code.visualstudio.com/)
+[![VS Code](https://img.shields.io/badge/VS%20Code-1.106%2B-blue?logo=visualstudiocode)](https://code.visualstudio.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Version](https://img.shields.io/github/v/release/nolikzero/claude-terminal-panel?label=version&color=green)](https://github.com/nolikzero/claude-terminal-panel/releases/latest)
 
@@ -15,18 +15,22 @@ Run **Claude Code**, **Gemini CLI**, **OpenAI Codex**, **Aider**, **OpenCode** a
 
 ## Features
 
-- **Dedicated Sidebar Terminal** - Run any AI CLI tool directly from VS Code's activity bar, always accessible while you code
+- **Dedicated Sidebar Terminal** - Run any AI CLI tool directly from VS Code's secondary sidebar, always accessible while you code
 - **Multi-Tab Support** - Run multiple terminal instances simultaneously with keyboard shortcuts for quick navigation
+- **Prompt Notifications** - Visual indicator (pulsing red dot) when the terminal is waiting for your input
+- **Custom Commands** - Create new terminals with custom commands, intelligent flag suggestions from `--help`
+- **Working Directory Selection** - Choose which workspace folder to use when creating new terminals
+- **Tab Accent Colors** - Color-coded tabs per workspace folder for easy identification in multi-root workspaces
 - **Works with Any AI Tool** - Claude Code, Gemini CLI, OpenAI Codex, Aider, and more
 - **VS Code Theme Integration** - Full 256-color support with automatic theme synchronization
 - **Dual Execution Modes** - Choose between direct mode (cleaner output) or shell mode (full shell features)
 - **Auto-run on Startup** - Optionally start your AI assistant automatically when VS Code opens
 - **Fully Configurable** - Customize the command, arguments, shell, and environment variables
-- **Quick Actions** - Restart or clear the terminal with a single click
+- **Quick Actions** - Restart the terminal with a single click
 
 ## Requirements
 
-- **VS Code** 1.85.0 or higher
+- **VS Code** 1.106.0 or higher
 - **An AI CLI tool** installed and accessible in your PATH (see [Supported Tools](#supported-tools))
 - **Node.js** - Required for native module compilation
 
@@ -82,14 +86,13 @@ npm run package
 
 1. **Open the Sidebar** - Click the Claude icon in the activity bar (secondary sidebar)
 2. **Interact with your AI** - Type your prompts and interact with your AI assistant directly in the terminal
-3. **Use Quick Actions** - Click the restart or clear icons in the view title bar
+3. **Use Quick Actions** - Click the restart icon in the view title bar, or use the + button to add new tabs
 
 ### Commands
 
 | Command                         | Description                    |
 | ------------------------------- | ------------------------------ |
 | `Claude Terminal: Restart`      | Restart the terminal session   |
-| `Claude Terminal: Clear`        | Clear the terminal output      |
 | `Claude Terminal: New Tab`      | Create a new terminal tab      |
 | `Claude Terminal: Close Tab`    | Close the current terminal tab |
 | `Claude Terminal: Next Tab`     | Switch to the next tab         |
@@ -110,14 +113,17 @@ Access commands via the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`) or the 
 
 Configure the extension via VS Code Settings (`Cmd+,` / `Ctrl+,`):
 
-| Setting                     | Type    | Default    | Description                                           |
-| --------------------------- | ------- | ---------- | ----------------------------------------------------- |
-| `claudeTerminal.command`    | string  | `"claude"` | The command to run in the terminal                    |
-| `claudeTerminal.args`       | array   | `[]`       | Arguments to pass to the command                      |
-| `claudeTerminal.autoRun`    | boolean | `true`     | Automatically run the command when the terminal opens |
-| `claudeTerminal.shell`      | string  | `""`       | Custom shell to use (empty for system default)        |
-| `claudeTerminal.env`        | object  | `{}`       | Additional environment variables                      |
-| `claudeTerminal.directMode` | boolean | `true`     | Run command directly without shell wrapper            |
+| Setting                                  | Type    | Default    | Description                                               |
+| ---------------------------------------- | ------- | ---------- | --------------------------------------------------------- |
+| `claudeTerminal.command`                 | string  | `"claude"` | The command to run in the terminal                        |
+| `claudeTerminal.args`                    | array   | `[]`       | Arguments to pass to the command                          |
+| `claudeTerminal.autoRun`                 | boolean | `true`     | Automatically run the command when the terminal opens     |
+| `claudeTerminal.shell`                   | string  | `""`       | Custom shell to use (empty for system default)            |
+| `claudeTerminal.env`                     | object  | `{}`       | Additional environment variables                          |
+| `claudeTerminal.directMode`              | boolean | `true`     | Run command directly without shell wrapper                |
+| `claudeTerminal.promptNotification`      | boolean | `true`     | Show notification indicator when terminal awaits input    |
+| `claudeTerminal.promptNotificationDelay` | number  | `300`      | Delay (ms) before showing notification after output stops |
+| `claudeTerminal.promptPatterns`          | array   | `[]`       | Additional regex patterns to detect input prompts         |
 
 ### Configuration Examples
 
@@ -185,6 +191,66 @@ Configure the extension via VS Code Settings (`Cmd+,` / `Ctrl+,`):
   }
 }
 ```
+
+## Prompt Notifications
+
+The extension can detect when the terminal is waiting for user input and show a visual notification (pulsing red dot) on the tab. This helps you notice when your AI assistant needs attention, even when you're working in another part of VS Code.
+
+### Built-in Detection Patterns
+
+The extension automatically detects common prompt patterns:
+
+- **Yes/No prompts**: `[Y/n]`, `(y/n)`, `[yes/no]`
+- **Confirmation prompts**: `Confirm?`, `Continue?`, `Accept?`, `Proceed?`, `Apply?`
+- **Interactive menus**: `❯`, `›`, numbered selections
+- **REPL prompts**: `>`, `>>>`, `command>`
+- **Claude Code hints**: Plan file prompts, "Would you like to" questions
+- **General prompts**: "Press enter to confirm", "Esc to cancel"
+
+### Custom Prompt Patterns
+
+If your AI tool uses custom prompts not detected by default, you can add your own regex patterns:
+
+```json
+{
+  "claudeTerminal.promptPatterns": ["^mybot> $", "\\[waiting\\]", "^Input: $"]
+}
+```
+
+### Disabling Notifications
+
+To disable prompt notifications entirely:
+
+```json
+{
+  "claudeTerminal.promptNotification": false
+}
+```
+
+## Custom Commands
+
+Click the CLI icon button (next to the + button) in the tab bar to create a terminal with a custom command instead of the default.
+
+### Command Input
+
+When creating a custom terminal, you'll be prompted to enter:
+
+1. **Command**: The CLI tool to run (e.g., `aider`, `gemini`, `opencode`)
+2. **Arguments**: Additional flags and options
+
+### Intelligent Flag Suggestions
+
+As you type, the extension fetches available flags from the command's `--help` output and suggests them. This works with most CLI tools including:
+
+- Claude Code
+- Gemini CLI
+- Aider
+- OpenCode
+- And any tool that supports `--help`
+
+### Working Directory Selection
+
+In multi-root workspaces, you'll be prompted to select which folder the terminal should start in. Each folder gets a unique accent color on its tab for easy identification.
 
 ## Development
 
