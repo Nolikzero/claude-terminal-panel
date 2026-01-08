@@ -299,6 +299,12 @@ class WebviewContext {
     tabElement.dataset.id = tab.id;
     tabElement.title = tab.name;
 
+    // Apply accent color if provided (for multi-workspace folder coloring)
+    if (tab.accentColor) {
+      tabElement.dataset.accent = 'true';
+      tabElement.style.borderLeftColor = tab.accentColor;
+    }
+
     const nameSpan = document.createElement('span');
     nameSpan.className = 'tab-name';
     nameSpan.textContent = String(index + 1);

@@ -24,6 +24,7 @@ export interface TabInfo {
   id: string;
   name: string;
   isActive: boolean;
+  accentColor?: string;
 }
 
 // Message types from extension to webview
@@ -31,7 +32,7 @@ export type WebviewIncomingMessage =
   | { type: 'output'; id: string; data: string }
   | { type: 'clear'; id: string }
   | { type: 'tabsUpdate'; tabs: TabInfo[] }
-  | { type: 'createTab'; id: string; name: string }
+  | { type: 'createTab'; id: string; name: string; accentColor?: string }
   | { type: 'switchTab'; id: string }
   | { type: 'removeTab'; id: string };
 

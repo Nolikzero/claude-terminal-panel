@@ -1,4 +1,5 @@
 import type { TerminalInstance, TabInfo } from './types';
+import { WORKSPACE_ACCENT_COLORS } from './types';
 
 /**
  * Manages terminal instance state including active terminal tracking.
@@ -113,8 +114,20 @@ export class TerminalStateManager {
     return this.getAll().map((t) => ({
       id: t.id,
       name: t.name,
-      isActive: t.isActive
+      isActive: t.isActive,
+      accentColor: this.getAccentColor(t.workspaceFolderIndex)
     }));
+  }
+
+  /**
+   * Returns the accent color for a workspace folder index.
+   * Returns undefined for single-folder workspaces (no color accent).
+   */
+  private getAccentColor(folderIndex: number | undefined): string | undefined {
+    if (folderIndex === undefined) {
+      return undefined;
+    }
+    return WORKSPACE_ACCENT_COLORS[folderIndex % WORKSPACE_ACCENT_COLORS.length];
   }
 
   /**

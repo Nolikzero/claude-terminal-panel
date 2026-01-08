@@ -13,6 +13,14 @@ export interface PtyEventCallbacks {
 }
 
 /**
+ * Result of selecting a working directory.
+ */
+export interface WorkingDirectorySelection {
+  path: string;
+  folderIndex: number | undefined;
+}
+
+/**
  * Manages PTY process lifecycle.
  * Extracted from ClaudeTerminalViewProvider._startTerminalForInstance().
  */
@@ -53,21 +61,25 @@ export class PtyManager {
 
   /**
    * Prompts the user to select a workspace folder if multiple are available.
-   * Returns the selected folder path, or the default working directory if only one/none.
+   * Returns the selected folder path and its index for color mapping.
    */
-  async selectWorkingDirectory(): Promise<string> {
+  async selectWorkingDirectory(): Promise<WorkingDirectorySelection> {
     const folders = vscode.workspace.workspaceFolders;
 
-    // If no folders or only one, use default behavior
+    // If no folders or only one, use default behavior (no color indexing)
     if (!folders || folders.length <= 1) {
-      return this.getWorkingDirectory();
+      return {
+        path: this.getWorkingDirectory(),
+        folderIndex: undefined
+      };
     }
 
     // Multiple workspace folders - let user choose
-    const items = folders.map((folder) => ({
+    const items = folders.map((folder, index) => ({
       label: folder.name,
       description: folder.uri.fsPath,
-      folder
+      folder,
+      index
     }));
 
     const selected = await vscode.window.showQuickPick(items, {
@@ -76,11 +88,17 @@ export class PtyManager {
     });
 
     if (selected) {
-      return selected.folder.uri.fsPath;
+      return {
+        path: selected.folder.uri.fsPath,
+        folderIndex: selected.index
+      };
     }
 
     // User cancelled - use first folder as default
-    return folders[0].uri.fsPath;
+    return {
+      path: folders[0].uri.fsPath,
+      folderIndex: 0
+    };
   }
 
   private ensureNodePtyLoaded(): void {

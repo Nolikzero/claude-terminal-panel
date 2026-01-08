@@ -53,13 +53,16 @@ body {
   height: 28px;
   background-color: var(--vscode-tab-inactiveBackground, #2d2d2d);
   border-bottom: 1px solid var(--vscode-tab-border, #3c3c3c);
+  border-left: 2px solid transparent;
   cursor: pointer;
   font-size: 11px;
   font-weight: 500;
   color: var(--vscode-tab-inactiveForeground, #8c8c8c);
   position: relative;
   flex-shrink: 0;
-  transition: background-color 0.1s ease;
+  transition:
+    background-color 0.1s ease,
+    border-left-color 0.1s ease;
   overflow: hidden;
 }
 
@@ -67,10 +70,21 @@ body {
   background-color: var(--vscode-tab-hoverBackground, #383838);
 }
 
+/* Active tab without accent color uses default focus border */
 .tab.active {
   background-color: var(--vscode-tab-activeBackground, #1e1e1e);
   color: var(--vscode-tab-activeForeground, #ffffff);
-  border-left: 2px solid var(--vscode-focusBorder, #007acc);
+  border-left-color: var(--vscode-focusBorder, #007acc);
+}
+
+/* Inactive tabs with accent color show it at reduced opacity */
+.tab[data-accent]:not(.active) {
+  opacity: 0.4;
+}
+
+/* Active tabs with accent color use full opacity (border color set inline) */
+.tab[data-accent].active {
+  opacity: 1;
 }
 
 .tab-name {

@@ -4,6 +4,8 @@ import { ConfigManager } from './configManager';
 import { TerminalStateManager } from './terminalStateManager';
 import { dispatchMessage, type MessageHandlerContext } from './messageHandlers';
 import type { WebviewMessage, TerminalInstance, ExtensionMessage } from './types';
+import { WORKSPACE_ACCENT_COLORS } from './types';
+import { CommandInputPicker } from './commandInputPicker';
 
 export class ClaudeTerminalViewProvider
   implements vscode.WebviewViewProvider, MessageHandlerContext
@@ -17,6 +19,7 @@ export class ClaudeTerminalViewProvider
   private readonly configManager = new ConfigManager();
   private readonly stateManager = new TerminalStateManager();
   private readonly ptyManager: PtyManager;
+  private readonly commandPicker = new CommandInputPicker();
 
   constructor(private readonly extensionUri: vscode.Uri) {
     const callbacks: PtyEventCallbacks = {
@@ -25,6 +28,19 @@ export class ClaudeTerminalViewProvider
       onError: this.handlePtyError.bind(this)
     };
     this.ptyManager = new PtyManager(callbacks);
+
+    // Pre-load help for CLI agents from README (missing commands are handled gracefully)
+    const config = this.configManager.getConfig();
+    this.commandPicker.preloadCommands([
+      config.command,
+      'claude',
+      'gemini',
+      'aider',
+      'codex',
+      'gh',
+      'interpreter',
+      'opencode'
+    ]);
   }
 
   // --- MessageHandlerContext Implementation ---
@@ -118,23 +134,25 @@ export class ClaudeTerminalViewProvider
     const id = this.stateManager.generateId();
     const name = this.stateManager.generateName();
 
+    // Select working directory first to get folder index
+    const { path: cwd, folderIndex } = await this.ptyManager.selectWorkingDirectory();
+
     const instance: TerminalInstance = {
       id,
       name,
       pty: undefined,
-      isActive: false
+      isActive: false,
+      workspaceFolderIndex: folderIndex
     };
 
     // Add instance first, then activate (so setActive can find it)
     this.stateManager.set(id, instance);
     this.stateManager.setActive(id);
 
-    // Notify webview
-    this.postMessage({ type: 'createTab', id, name });
+    // Notify webview with accent color
+    const accentColor = this.getAccentColor(folderIndex);
+    this.postMessage({ type: 'createTab', id, name, accentColor });
     this.sendTabsUpdate();
-
-    // Select working directory (prompts if multiple workspace folders)
-    const cwd = await this.ptyManager.selectWorkingDirectory();
 
     // Start the terminal process
     const config = this.configManager.getConfig();
@@ -150,17 +168,10 @@ export class ClaudeTerminalViewProvider
     const config = this.configManager.getConfig();
     const defaultCommand = [config.command, ...config.args].join(' ');
 
-    const input = await vscode.window.showInputBox({
-      prompt: 'Enter command to run',
-      value: defaultCommand,
-      placeHolder: 'e.g., claude --dangerously-skip-permissions'
-    });
+    const result = await this.commandPicker.promptForCommand(defaultCommand);
 
-    if (input) {
-      const parts = input.trim().split(/\s+/);
-      const command = parts[0];
-      const args = parts.slice(1);
-      await this.createTerminalWithCommand(command, args);
+    if (!result.cancelled && result.command) {
+      await this.createTerminalWithCommand(result.command, result.args);
     }
   }
 
@@ -168,20 +179,23 @@ export class ClaudeTerminalViewProvider
     const id = this.stateManager.generateId();
     const name = this.stateManager.generateName();
 
+    // Select working directory first to get folder index
+    const { path: cwd, folderIndex } = await this.ptyManager.selectWorkingDirectory();
+
     const instance: TerminalInstance = {
       id,
       name,
       pty: undefined,
-      isActive: false
+      isActive: false,
+      workspaceFolderIndex: folderIndex
     };
 
     this.stateManager.set(id, instance);
     this.stateManager.setActive(id);
 
-    this.postMessage({ type: 'createTab', id, name });
+    const accentColor = this.getAccentColor(folderIndex);
+    this.postMessage({ type: 'createTab', id, name, accentColor });
     this.sendTabsUpdate();
-
-    const cwd = await this.ptyManager.selectWorkingDirectory();
 
     // Use provided command/args instead of config
     const config = this.configManager.getConfig();
@@ -289,9 +303,17 @@ export class ClaudeTerminalViewProvider
     this.disposed = true;
     this.ptyManager.killAll();
     this.configManager.dispose();
+    this.commandPicker.dispose();
   }
 
   // --- Private Helpers ---
+
+  private getAccentColor(folderIndex: number | undefined): string | undefined {
+    if (folderIndex === undefined) {
+      return undefined;
+    }
+    return WORKSPACE_ACCENT_COLORS[folderIndex % WORKSPACE_ACCENT_COLORS.length];
+  }
 
   private postMessage(message: ExtensionMessage): void {
     this.view?.webview.postMessage(message);

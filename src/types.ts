@@ -1,3 +1,15 @@
+// Muted but distinct workspace accent colors
+export const WORKSPACE_ACCENT_COLORS = [
+  '#6b9ac4', // Muted blue
+  '#82b366', // Muted green
+  '#c4a46b', // Muted gold
+  '#b36b82', // Muted rose
+  '#9b82b3', // Muted purple
+  '#6bc4b3', // Muted teal
+  '#c47a6b', // Muted coral
+  '#7a8c9e' // Muted steel
+] as const;
+
 // node-pty types
 export interface IPty {
   onData: (callback: (data: string) => void) => void;
@@ -37,6 +49,7 @@ export interface TerminalInstance {
   name: string;
   pty: IPty | undefined;
   isActive: boolean;
+  workspaceFolderIndex?: number;
 }
 
 // Tab information for UI
@@ -44,6 +57,7 @@ export interface TabInfo {
   id: string;
   name: string;
   isActive: boolean;
+  accentColor?: string;
 }
 
 // Webview message types (from webview to extension)
@@ -61,6 +75,22 @@ export type ExtensionMessage =
   | { type: 'output'; id: string; data: string }
   | { type: 'clear'; id: string }
   | { type: 'tabsUpdate'; tabs: TabInfo[] }
-  | { type: 'createTab'; id: string; name: string }
+  | { type: 'createTab'; id: string; name: string; accentColor?: string }
   | { type: 'switchTab'; id: string }
   | { type: 'removeTab'; id: string };
+
+// Command help parsing types
+export interface CommandFlag {
+  flag: string;
+  shortFlag?: string;
+  description: string;
+  takesValue?: boolean;
+  valueHint?: string;
+}
+
+export interface ParsedHelp {
+  command: string;
+  flags: CommandFlag[];
+  subcommands?: string[];
+  parseErrors?: string[];
+}
