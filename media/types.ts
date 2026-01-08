@@ -49,6 +49,8 @@ export interface TerminalEntry {
   terminal: XTermTerminal;
   fitAddon: XTermFitAddon;
   element: HTMLDivElement;
+  isAtBottom: boolean;
+  lastScrollTop: number;
 }
 
 // xterm.js theme type (re-export for convenience)

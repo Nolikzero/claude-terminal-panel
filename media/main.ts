@@ -89,6 +89,32 @@ class ThemeBuilder {
   }
 }
 
+// Scroll management for terminal viewport
+class ScrollManager {
+  static isAtBottom(terminal: InstanceType<typeof Terminal>): boolean {
+    const buffer = terminal.buffer.active;
+    return buffer.viewportY >= buffer.baseY - 1;
+  }
+
+  static setupScrollTracking(entry: TerminalEntry): void {
+    entry.terminal.onScroll(() => {
+      entry.isAtBottom = this.isAtBottom(entry.terminal);
+    });
+
+    const viewport = entry.element.querySelector('.xterm-viewport') as HTMLElement;
+    if (viewport) {
+      viewport.addEventListener(
+        'scroll',
+        () => {
+          entry.lastScrollTop = viewport.scrollTop;
+          entry.isAtBottom = this.isAtBottom(entry.terminal);
+        },
+        { passive: true }
+      );
+    }
+  }
+}
+
 // Handler registry pattern for message handling
 type MessageHandler<T extends WebviewIncomingMessage> = (message: T, ctx: WebviewContext) => void;
 
@@ -105,13 +131,19 @@ const messageHandlers: MessageHandlers = {
   output: (message, ctx) => {
     const t = ctx.state.get(message.id);
     if (t) {
+      const wasAtBottom = ScrollManager.isAtBottom(t.terminal);
       t.terminal.write(message.data);
+      if (wasAtBottom) {
+        requestAnimationFrame(() => t.terminal.scrollToBottom());
+      }
     }
   },
   clear: (message, ctx) => {
     const t = ctx.state.get(message.id);
     if (t) {
       t.terminal.clear();
+      t.isAtBottom = true;
+      t.lastScrollTop = 0;
     }
   },
   tabsUpdate: (message, ctx) => {
@@ -164,7 +196,21 @@ class WebviewContext {
       if (activeId) {
         const active = this.state.get(activeId);
         if (active) {
+          const wasAtBottom = ScrollManager.isAtBottom(active.terminal);
+          const viewport = active.element.querySelector('.xterm-viewport') as HTMLElement;
+          const savedScrollTop = viewport?.scrollTop ?? 0;
+
           active.fitAddon.fit();
+
+          requestAnimationFrame(() => {
+            if (wasAtBottom) {
+              active.terminal.scrollToBottom();
+            } else if (viewport && savedScrollTop > 0) {
+              viewport.scrollTop = savedScrollTop;
+            }
+            active.isAtBottom = wasAtBottom;
+          });
+
           this.postMessage({
             type: 'resize',
             id: activeId,
@@ -308,13 +354,21 @@ class WebviewContext {
     terminal.loadAddon(fitAddon);
     terminal.loadAddon(webLinksAddon);
     terminal.open(container);
-    fitAddon.fit();
+
+    const entry: TerminalEntry = {
+      terminal,
+      fitAddon,
+      element: container,
+      isAtBottom: true,
+      lastScrollTop: 0
+    };
 
     terminal.onData((data) => {
+      entry.isAtBottom = true;
       this.postMessage({ type: 'input', id, data });
     });
 
-    const entry: TerminalEntry = { terminal, fitAddon, element: container };
+    ScrollManager.setupScrollTracking(entry);
     this.state.set(id, entry);
 
     return entry;
@@ -329,16 +383,34 @@ class WebviewContext {
 
     const active = this.state.get(id);
     if (active) {
-      setTimeout(() => {
-        active.fitAddon.fit();
-        active.terminal.focus();
-        this.postMessage({
-          type: 'resize',
-          id,
-          cols: active.terminal.cols,
-          rows: active.terminal.rows
+      const wasAtBottom = active.isAtBottom;
+      const savedScrollTop = active.lastScrollTop;
+
+      // Double RAF ensures browser has completed layout after display change
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          active.fitAddon.fit();
+          active.terminal.focus();
+
+          requestAnimationFrame(() => {
+            if (wasAtBottom) {
+              active.terminal.scrollToBottom();
+            } else {
+              const viewport = active.element.querySelector('.xterm-viewport') as HTMLElement;
+              if (viewport && savedScrollTop > 0) {
+                viewport.scrollTop = savedScrollTop;
+              }
+            }
+          });
+
+          this.postMessage({
+            type: 'resize',
+            id,
+            cols: active.terminal.cols,
+            rows: active.terminal.rows
+          });
         });
-      }, 10);
+      });
     }
   }
 
