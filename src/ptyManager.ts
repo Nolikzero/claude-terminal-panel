@@ -24,15 +24,23 @@ export class PtyManager {
 
   /**
    * Spawns a new PTY process for the given terminal ID.
+   * @param cwd Optional working directory. If not provided, uses default logic.
    */
-  spawn(terminalId: string, config: TerminalConfig, cols: number, rows: number): void {
+  spawn(
+    terminalId: string,
+    config: TerminalConfig,
+    cols: number,
+    rows: number,
+    cwd?: string
+  ): void {
     // Kill existing PTY for this terminal if any
     this.kill(terminalId);
 
     try {
       this.ensureNodePtyLoaded();
-      const { shell, env, cwd } = this.prepareSpawnOptions(config);
-      const pty = this.createPty(config, shell, cols, rows, cwd, env);
+      const { shell, env, cwd: defaultCwd } = this.prepareSpawnOptions(config);
+      const workingDir = cwd ?? defaultCwd;
+      const pty = this.createPty(config, shell, cols, rows, workingDir, env);
 
       this.ptys.set(terminalId, pty);
       this.setupPtyEventHandlers(terminalId, pty);
@@ -41,6 +49,38 @@ export class PtyManager {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.callbacks.onError(terminalId, errorMessage);
     }
+  }
+
+  /**
+   * Prompts the user to select a workspace folder if multiple are available.
+   * Returns the selected folder path, or the default working directory if only one/none.
+   */
+  async selectWorkingDirectory(): Promise<string> {
+    const folders = vscode.workspace.workspaceFolders;
+
+    // If no folders or only one, use default behavior
+    if (!folders || folders.length <= 1) {
+      return this.getWorkingDirectory();
+    }
+
+    // Multiple workspace folders - let user choose
+    const items = folders.map((folder) => ({
+      label: folder.name,
+      description: folder.uri.fsPath,
+      folder
+    }));
+
+    const selected = await vscode.window.showQuickPick(items, {
+      placeHolder: 'Select workspace folder for Claude',
+      title: 'Choose Working Directory'
+    });
+
+    if (selected) {
+      return selected.folder.uri.fsPath;
+    }
+
+    // User cancelled - use first folder as default
+    return folders[0].uri.fsPath;
   }
 
   private ensureNodePtyLoaded(): void {

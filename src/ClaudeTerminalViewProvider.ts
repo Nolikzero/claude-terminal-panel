@@ -32,7 +32,7 @@ export class ClaudeTerminalViewProvider
   handleReady(cols: number, rows: number): void {
     this.lastCols = cols;
     this.lastRows = rows;
-    this.createTerminal();
+    void this.createTerminal();
   }
 
   handleInput(id: string, data: string): void {
@@ -46,7 +46,7 @@ export class ClaudeTerminalViewProvider
   }
 
   handleNewTab(): void {
-    this.createTerminal();
+    void this.createTerminal();
   }
 
   handleCloseTab(id: string): void {
@@ -110,7 +110,7 @@ export class ClaudeTerminalViewProvider
 
   // --- Terminal Management (Public API) ---
 
-  public createTerminal(): string {
+  public async createTerminal(): Promise<string> {
     const id = this.stateManager.generateId();
     const name = this.stateManager.generateName();
 
@@ -129,9 +129,12 @@ export class ClaudeTerminalViewProvider
     this.postMessage({ type: 'createTab', id, name });
     this.sendTabsUpdate();
 
+    // Select working directory (prompts if multiple workspace folders)
+    const cwd = await this.ptyManager.selectWorkingDirectory();
+
     // Start the terminal process
     const config = this.configManager.getConfig();
-    this.ptyManager.spawn(id, config, this.lastCols, this.lastRows);
+    this.ptyManager.spawn(id, config, this.lastCols, this.lastRows, cwd);
 
     // Switch to the new tab
     this.postMessage({ type: 'switchTab', id });
@@ -163,7 +166,7 @@ export class ClaudeTerminalViewProvider
       this.switchToTerminal(newActive.id);
     } else {
       this.stateManager.clearActive();
-      this.createTerminal();
+      void this.createTerminal();
       return;
     }
     this.sendTabsUpdate();

@@ -29,7 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
   // Multi-tab commands
   context.subscriptions.push(
     vscode.commands.registerCommand('claudeTerminal.newTab', () => {
-      terminalProvider?.createTerminal();
+      void terminalProvider?.createTerminal();
     })
   );
 
