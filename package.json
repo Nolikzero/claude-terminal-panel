@@ -2,7 +2,7 @@
   "name": "claude-terminal-panel",
   "displayName": "Claude Terminal Panel",
   "description": "A dedicated terminal in the secondary panel for running Claude Code",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "publisher": "0ly",
   "license": "MIT",
   "icon": "media/icon.png",
